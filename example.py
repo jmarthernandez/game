@@ -3,9 +3,13 @@ class Person:
         self.name = name
         self.age = age
         self.hungry = False
+        self.dead = false
 
     def run(self):
         self.hungry = True
+
+    def killed(self):
+        self.dead = True
 
 
 justin = Person("Justin", 29)
@@ -16,3 +20,4 @@ print(justin.hungry)
 justin.run()
 print(justin.hungry)
 print(lucas.hungry)
+
