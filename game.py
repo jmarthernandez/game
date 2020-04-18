@@ -1,5 +1,5 @@
 """
-Platformer Game
+Bagel Queen
 """
 import arcade
 
