@@ -25,7 +25,6 @@ class MyGame(arcade.Window):
         self.player_list = arcade.SpriteList()
         self.wall_list = arcade.SpriteList()
         self.player_sprite = None
-        self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
 
     def setup(self):
         """ Set up the game here. Call this function to restart the game. """

@@ -3,7 +3,7 @@ class Person:
         self.name = name
         self.age = age
         self.hungry = False
-        self.dead = false
+        self.dead = False
 
     def run(self):
         self.hungry = True
