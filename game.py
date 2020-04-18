@@ -2,11 +2,12 @@
 Bagel Queen
 """
 import arcade
+import random
 
 # Constants
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 650
-SCREEN_TITLE = "Italian Greyhound Adventure"
+SCREEN_TITLE = "Fun Game"
 CHARACTER_SCALING = 1
 PLAYER_MOVEMENT_SPEED = 5
 
@@ -23,7 +24,6 @@ class MyGame(arcade.Window):
 
         arcade.set_background_color(arcade.csscolor.DARK_ORANGE)
         self.player_list = arcade.SpriteList()
-        self.wall_list = arcade.SpriteList()
         self.player_sprite = None
 
     def setup(self):
@@ -33,14 +33,11 @@ class MyGame(arcade.Window):
         player_sprite.set_position(100, 100)
         self.player_sprite = player_sprite
         self.player_list.append(player_sprite)
-        self.physics_engine = arcade.PhysicsEngineSimple(self.player_sprite, self.wall_list)
 
     def on_draw(self):
         """ Render the screen. """
-
         arcade.start_render()
         self.player_list.draw()
-        # Code to draw the screen goes here
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.UP or key == arcade.key.W:
@@ -65,8 +62,7 @@ class MyGame(arcade.Window):
 
     def on_update(self, delta_time):
         """ Movement and game logic """
-        # Move the player with the physics engine
-        self.physics_engine.update()
+        self.player_list.update()
 
 
 def main():
