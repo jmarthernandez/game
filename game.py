@@ -24,7 +24,10 @@ class MyGame(arcade.Window):
 
         arcade.set_background_color(arcade.csscolor.DARK_ORANGE)
         self.player_list = arcade.SpriteList()
+        self.bee_list = arcade.SpriteList()
+        self.coinBronze_list = arcade.SpriteList()
         self.player_sprite = None
+        self.score = 0
 
     def setup(self):
         """ Set up the game here. Call this function to restart the game. """
@@ -34,11 +37,29 @@ class MyGame(arcade.Window):
         self.player_sprite = player_sprite
         self.player_list.append(player_sprite)
 
+
+
+
+
+        for i in range(50):
+            bee_sprite = arcade.Sprite(":resources:images/enemies/bee.png", .5)
+            bee_sprite.set_position(random.randrange(SCREEN_WIDTH/2),random.randrange(SCREEN_HEIGHT))
+            self.bee_list.append(bee_sprite)
+            if i % 2 == 1:
+                coinBronze_sprite = arcade.Sprite(":resources:images/items/coinBronze.png", random.randrange(2,4)/2)
+                coinBronze_sprite.set_position(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT))
+                self.coinBronze_list.append(coinBronze_sprite)
+
     def on_draw(self):
         """ Render the screen. """
         arcade.start_render()
+
+        self.bee_list.draw()
+        self.coinBronze_list.draw()
         self.player_list.draw()
 
+        output = f"Score: {self.score}"
+        arcade.draw_text(output, 10, 20,arcade.color.AFRICAN_VIOLET,12)
     def on_key_press(self, key, modifiers):
         if key == arcade.key.UP or key == arcade.key.W:
             self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
@@ -63,6 +84,20 @@ class MyGame(arcade.Window):
     def on_update(self, delta_time):
         """ Movement and game logic """
         self.player_list.update()
+        bee_hit_list = arcade.check_for_collision_with_list(self.player_sprite,self.bee_list)
+        for bee in bee_hit_list:
+            bee.remove_from_sprite_lists()
+            self.score += 1
+
+        for bee in self.bee_list:
+            bee.change_x = 1
+        self.bee_list.update()
+        coinBronze_hit_list = arcade.check_for_collision_with_list(self.player_sprite,self.coinBronze_list)
+        for coinBronze in coinBronze_hit_list:
+            coinBronze.remove_from_sprite_lists()
+
+            self.score -= 3
+
 
 
 def main():
