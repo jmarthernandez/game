@@ -9,7 +9,9 @@ SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 650
 SCREEN_TITLE = "Fun Game"
 CHARACTER_SCALING = 1
-PLAYER_MOVEMENT_SPEED = 5
+MAX_SPEED = 20
+ACCELERATION_RATE = .5
+FRICTION = .2
 
 
 class MyGame(arcade.Window):
@@ -28,6 +30,10 @@ class MyGame(arcade.Window):
         self.coin_bronze_list = arcade.SpriteList()
         self.player_sprite = None
         self.score = 0
+        self.left_pressed = False
+        self.right_pressed = False
+        self.up_pressed = False
+        self.down_pressed = False
 
     def setup(self):
         """ Set up the game here. Call this function to restart the game. """
@@ -57,29 +63,66 @@ class MyGame(arcade.Window):
         output = f"Score: {self.score}"
         arcade.draw_text(output, 10, 20, arcade.color.AFRICAN_VIOLET, 12)
 
+        arcade.draw_text(f"X Speed: {self.player_sprite.change_x:6.3f}", 10, 50, arcade.color.BLACK)
+        arcade.draw_text(f"Y Speed: {self.player_sprite.change_y:6.3f}", 10, 70, arcade.color.BLACK)
+
     def on_key_press(self, key, modifiers):
-        if key == arcade.key.UP or key == arcade.key.W:
-            self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
-        elif key == arcade.key.DOWN or key == arcade.key.S:
-            self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
-        elif key == arcade.key.LEFT or key == arcade.key.A:
-            self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
-        elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
+        if key == arcade.key.UP:
+            self.up_pressed = True
+        elif key == arcade.key.DOWN:
+            self.down_pressed = True
+        elif key == arcade.key.LEFT:
+            self.left_pressed = True
+        elif key == arcade.key.RIGHT:
+            self.right_pressed = True
 
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """
-        if key == arcade.key.UP or key == arcade.key.W:
-            self.player_sprite.change_y = 0
-        elif key == arcade.key.DOWN or key == arcade.key.S:
-            self.player_sprite.change_y = 0
-        elif key == arcade.key.LEFT or key == arcade.key.A:
-            self.player_sprite.change_x = 0
-        elif key == arcade.key.RIGHT or key == arcade.key.D:
-            self.player_sprite.change_x = 0
+        if key == arcade.key.UP:
+            self.up_pressed = False
+        elif key == arcade.key.DOWN:
+            self.down_pressed = False
+        elif key == arcade.key.LEFT:
+            self.left_pressed = False
+        elif key == arcade.key.RIGHT:
+            self.right_pressed = False
 
     def on_update(self, delta_time):
         """ Movement and game logic """
+
+        # Apply acceleration based on the keys pressed
+        if self.up_pressed and not self.down_pressed:
+            self.player_sprite.change_y += ACCELERATION_RATE
+        elif self.down_pressed and not self.up_pressed:
+            self.player_sprite.change_y += -ACCELERATION_RATE
+        if self.left_pressed and not self.right_pressed:
+            self.player_sprite.change_x += -ACCELERATION_RATE
+        elif self.right_pressed and not self.left_pressed:
+            self.player_sprite.change_x += ACCELERATION_RATE
+
+        if self.player_sprite.change_x > MAX_SPEED:
+            self.player_sprite.change_x = MAX_SPEED
+        elif self.player_sprite.change_x < -MAX_SPEED:
+            self.player_sprite.change_x = -MAX_SPEED
+        if self.player_sprite.change_y > MAX_SPEED:
+            self.player_sprite.change_y = MAX_SPEED
+        elif self.player_sprite.change_y < -MAX_SPEED:
+            self.player_sprite.change_y = -MAX_SPEED
+
+        if self.player_sprite.change_x > FRICTION:
+            self.player_sprite.change_x -= FRICTION
+        elif self.player_sprite.change_x < -FRICTION:
+            self.player_sprite.change_x += FRICTION
+        else:
+            self.player_sprite.change_x = 0
+
+        if self.player_sprite.change_y > FRICTION:
+            self.player_sprite.change_y -= FRICTION
+        elif self.player_sprite.change_y < -FRICTION:
+            self.player_sprite.change_y += FRICTION
+        else:
+            self.player_sprite.change_y = 0
+
         self.player_list.update()
         bee_hit_list = arcade.check_for_collision_with_list(self.player_sprite, self.bee_list)
         for bee in bee_hit_list:
