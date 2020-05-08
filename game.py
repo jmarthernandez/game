@@ -14,14 +14,59 @@ ACCELERATION_RATE = .5
 FRICTION = .2
 
 
+class Player(arcade.Sprite):
+    def __init__(self):
+
+        super().__init__(":resources:images/animated_characters/robot/robot_idle.png", CHARACTER_SCALING)
+        self.set_position(100, 100)
+
+    def update(self, pressed):
+        # Apply acceleration based on the keys pressed
+        if pressed["up"] and not pressed["down"]:
+            self.change_y += ACCELERATION_RATE
+        elif pressed["down"] and not pressed["up"]:
+            self.change_y += -ACCELERATION_RATE
+        if pressed["left"] and not pressed["right"]:
+            self.change_x += -ACCELERATION_RATE
+        elif pressed["right"] and not pressed["left"]:
+            self.change_x += ACCELERATION_RATE
+
+        if self.change_x > MAX_SPEED:
+            self.change_x = MAX_SPEED
+        elif self.change_x < -MAX_SPEED:
+            self.change_x = -MAX_SPEED
+        if self.change_y > MAX_SPEED:
+            self.change_y = MAX_SPEED
+        elif self.change_y < -MAX_SPEED:
+            self.change_y = -MAX_SPEED
+
+        if self.change_x > FRICTION:
+            self.change_x -= FRICTION
+        elif self.change_x < -FRICTION:
+            self.change_x += FRICTION
+        else:
+            self.change_x = 0
+
+        if self.change_y > FRICTION:
+            self.change_y -= FRICTION
+        elif self.change_y < -FRICTION:
+            self.change_y += FRICTION
+        else:
+            self.change_y = 0
+
+        self.center_x += self.change_x
+        self.center_y += self.change_y
+
+
 class Bouncer(arcade.Sprite):
 
     def __init__(self, filename, sprite_scaling):
 
         super().__init__(filename, sprite_scaling)
 
-        self.change_x = 0
-        self.change_y = 0
+        self.set_position(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT))
+        self.change_x = random.randrange(-2, 2)
+        self.change_y = random.randrange(-2, 2)
 
     def update(self):
 
@@ -53,6 +98,8 @@ class MenuView(arcade.View):
                          arcade.color.BLACK, font_size=50, anchor_x="center")
         arcade.draw_text("Click to advance.", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 75,
                          arcade.color.GRAY, font_size=20, anchor_x="center")
+        arcade.draw_text("Press Esc. to pause", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100, arcade.color.BLACK,
+                         font_size=20, anchor_x="center")
 
     def on_mouse_press(self, _x, _y, _button, _modifiers):
         game = MyGame()
@@ -69,35 +116,24 @@ class MyGame(arcade.View):
         super().__init__()
 
         arcade.set_background_color(arcade.csscolor.DARK_ORANGE)
-        self.player_list = arcade.SpriteList()
         self.bee_list = arcade.SpriteList()
         self.coin_bronze_list = arcade.SpriteList()
-        self.player_sprite = None
+        self.player_sprite = Player()
         self.score = 0
-        self.left_pressed = False
-        self.right_pressed = False
-        self.up_pressed = False
-        self.down_pressed = False
+        self.pressed = {
+            "left": False,
+            "right": False,
+            "up": False,
+            "down": False
+        }
 
     def setup(self):
         """ Set up the game here. Call this function to restart the game. """
-        image_source = ":resources:images/animated_characters/robot/robot_idle.png"
-        player_sprite = arcade.Sprite(image_source, CHARACTER_SCALING)
-        player_sprite.set_position(100, 100)
-        self.player_sprite = player_sprite
-        self.player_list.append(player_sprite)
-
         for i in range(50):
             bee_sprite = Bouncer(":resources:images/enemies/bee.png", .5)
-            bee_sprite.set_position(random.randrange(SCREEN_WIDTH / 2), random.randrange(SCREEN_HEIGHT))
-            bee_sprite.change_x = random.randrange(-2, 2)
-            bee_sprite.change_y = random.randrange(-2, 2)
             self.bee_list.append(bee_sprite)
             if i % 2 == 1:
                 coin_bronze_sprite = Bouncer(":resources:images/items/coinBronze.png", random.randrange(1, 2) / 2)
-                coin_bronze_sprite.set_position(random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT))
-                coin_bronze_sprite.change_x = random.randrange(-2, 2)
-                coin_bronze_sprite.change_y = random.randrange(-2, 2)
                 self.coin_bronze_list.append(coin_bronze_sprite)
 
     def on_draw(self):
@@ -106,9 +142,7 @@ class MyGame(arcade.View):
 
         self.bee_list.draw()
         self.coin_bronze_list.draw()
-        self.player_list.draw()
-        arcade.draw_text("Press Esc. to pause", SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100, arcade.color.BLACK,
-                         font_size=20, anchor_x="center")
+        self.player_sprite.draw()
 
         output = f"Score: {self.score}"
         arcade.draw_text(output, 10, 20, arcade.color.AFRICAN_VIOLET, 12)
@@ -119,13 +153,13 @@ class MyGame(arcade.View):
     def on_key_press(self, key, modifiers):
 
         if key == arcade.key.UP:
-            self.up_pressed = True
+            self.pressed["up"] = True
         elif key == arcade.key.DOWN:
-            self.down_pressed = True
+            self.pressed["down"] = True
         elif key == arcade.key.LEFT:
-            self.left_pressed = True
+            self.pressed["left"] = True
         elif key == arcade.key.RIGHT:
-            self.right_pressed = True
+            self.pressed["right"] = True
 
         elif key == arcade.key.ESCAPE:
             # pass self, the current view, to preserve this view's state
@@ -135,51 +169,17 @@ class MyGame(arcade.View):
     def on_key_release(self, key, modifiers):
         """Called when the user releases a key. """
         if key == arcade.key.UP:
-            self.up_pressed = False
+            self.pressed["up"] = False
         elif key == arcade.key.DOWN:
-            self.down_pressed = False
+            self.pressed["down"] = False
         elif key == arcade.key.LEFT:
-            self.left_pressed = False
+            self.pressed["left"] = False
         elif key == arcade.key.RIGHT:
-            self.right_pressed = False
+            self.pressed["right"] = False
 
     def on_update(self, delta_time):
         """ Movement and game logic """
-
-        # Apply acceleration based on the keys pressed
-        if self.up_pressed and not self.down_pressed:
-            self.player_sprite.change_y += ACCELERATION_RATE
-        elif self.down_pressed and not self.up_pressed:
-            self.player_sprite.change_y += -ACCELERATION_RATE
-        if self.left_pressed and not self.right_pressed:
-            self.player_sprite.change_x += -ACCELERATION_RATE
-        elif self.right_pressed and not self.left_pressed:
-            self.player_sprite.change_x += ACCELERATION_RATE
-
-        if self.player_sprite.change_x > MAX_SPEED:
-            self.player_sprite.change_x = MAX_SPEED
-        elif self.player_sprite.change_x < -MAX_SPEED:
-            self.player_sprite.change_x = -MAX_SPEED
-        if self.player_sprite.change_y > MAX_SPEED:
-            self.player_sprite.change_y = MAX_SPEED
-        elif self.player_sprite.change_y < -MAX_SPEED:
-            self.player_sprite.change_y = -MAX_SPEED
-
-        if self.player_sprite.change_x > FRICTION:
-            self.player_sprite.change_x -= FRICTION
-        elif self.player_sprite.change_x < -FRICTION:
-            self.player_sprite.change_x += FRICTION
-        else:
-            self.player_sprite.change_x = 0
-
-        if self.player_sprite.change_y > FRICTION:
-            self.player_sprite.change_y -= FRICTION
-        elif self.player_sprite.change_y < -FRICTION:
-            self.player_sprite.change_y += FRICTION
-        else:
-            self.player_sprite.change_y = 0
-
-        self.player_list.update()
+        self.player_sprite.update(self.pressed)
         bee_hit_list = arcade.check_for_collision_with_list(self.player_sprite, self.bee_list)
         for bee in bee_hit_list:
             bee.remove_from_sprite_lists()
